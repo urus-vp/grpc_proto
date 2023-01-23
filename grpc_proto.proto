@@ -28,14 +28,14 @@ service Greeter {
   rpc SayHelloAgain (HelloRequest) returns (HelloReply) {}
 
   rpc ListFeatures(HelloRequest) returns (stream Feature) {}
+
+  rpc WriteFirebasePayload(FirebasePayload) returns (FirebaseReply) {}
 }
 
-// The request message containing the user's name.
 message HelloRequest {
   string name = 1;
 }
 
-// The response message containing the greetings
 message HelloReply {
   string message = 1;
 }
@@ -48,4 +48,8 @@ message FirebasePayload {
   string collection = 1;
   string document = 2;
   string payload = 3;
+}
+
+message FirebaseReply {
+  string message = 1;
 }

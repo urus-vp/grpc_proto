@@ -26,6 +26,7 @@ type GreeterClient interface {
 	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
 	SayHelloAgain(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
 	ListFeatures(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (Greeter_ListFeaturesClient, error)
+	WriteFirebasePayload(ctx context.Context, in *FirebasePayload, opts ...grpc.CallOption) (*FirebaseReply, error)
 }
 
 type greeterClient struct {
@@ -86,6 +87,15 @@ func (x *greeterListFeaturesClient) Recv() (*Feature, error) {
 	return m, nil
 }
 
+func (c *greeterClient) WriteFirebasePayload(ctx context.Context, in *FirebasePayload, opts ...grpc.CallOption) (*FirebaseReply, error) {
+	out := new(FirebaseReply)
+	err := c.cc.Invoke(ctx, "/grpc_proto.Greeter/WriteFirebasePayload", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreeterServer is the server API for Greeter service.
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility
@@ -94,6 +104,7 @@ type GreeterServer interface {
 	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
 	SayHelloAgain(context.Context, *HelloRequest) (*HelloReply, error)
 	ListFeatures(*HelloRequest, Greeter_ListFeaturesServer) error
+	WriteFirebasePayload(context.Context, *FirebasePayload) (*FirebaseReply, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -109,6 +120,9 @@ func (UnimplementedGreeterServer) SayHelloAgain(context.Context, *HelloRequest) 
 }
 func (UnimplementedGreeterServer) ListFeatures(*HelloRequest, Greeter_ListFeaturesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListFeatures not implemented")
+}
+func (UnimplementedGreeterServer) WriteFirebasePayload(context.Context, *FirebasePayload) (*FirebaseReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WriteFirebasePayload not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 
@@ -180,6 +194,24 @@ func (x *greeterListFeaturesServer) Send(m *Feature) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _Greeter_WriteFirebasePayload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FirebasePayload)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).WriteFirebasePayload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/grpc_proto.Greeter/WriteFirebasePayload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).WriteFirebasePayload(ctx, req.(*FirebasePayload))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -194,6 +226,10 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SayHelloAgain",
 			Handler:    _Greeter_SayHelloAgain_Handler,
+		},
+		{
+			MethodName: "WriteFirebasePayload",
+			Handler:    _Greeter_WriteFirebasePayload_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
